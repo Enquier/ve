@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('mms')
-.factory('ProjectService', ['$q','$http','ApplicationService','CacheService','ElementService','URLService','_', ProjectService]);
+    .factory('ProjectService', ['$q','$http','ApplicationService','CacheService','ElementService','URLService','_', ProjectService]);
 
 /**
  * @ngdoc service
@@ -43,16 +43,16 @@ function ProjectService($q, $http,ApplicationService,CacheService,ElementService
         } else {
             inProgress[urlkey] = deferred.promise;
             $http.get(urlkey)
-            .then(function(response) {
-                if (!response.data.orgs || response.data.orgs.length < 1) {
-                    deferred.reject({status: 404, data: '', message: 'Org not found'});
-                } else {
-                    CacheService.put(key, response.data.orgs[0], true);
-                    deferred.resolve(CacheService.get(key));
-                }
-            }, function(response) {
-                URLService.handleHttpStatus(response.data, response.status, response.headers, response.config, deferred);
-            }).finally(function() {
+                .then(function(response) {
+                    if (!response.data.orgs || response.data.orgs.length < 1) {
+                        deferred.reject({status: 404, data: '', message: 'Org not found'});
+                    } else {
+                        CacheService.put(key, response.data.orgs[0], true);
+                        deferred.resolve(CacheService.get(key));
+                    }
+                }, function(response) {
+                    URLService.handleHttpStatus(response.data, response.status, response.headers, response.config, deferred);
+                }).finally(function() {
                 delete inProgress[urlkey];
             });
         }
@@ -63,7 +63,7 @@ function ProjectService($q, $http,ApplicationService,CacheService,ElementService
      * @ngdoc method
      * @name mms.ProjectService#getOrgs
      * @methodOf mms.ProjectService
-     * 
+     *
      * @description
      * Gets orgs information
      *
@@ -79,19 +79,19 @@ function ProjectService($q, $http,ApplicationService,CacheService,ElementService
             deferred.resolve(CacheService.get(key));
         } else {
             inProgress[key] = deferred.promise;
-            $http.get(URLService.getOrgsURL())
-            .then(function(response) {
-                var orgs = [];
-                for (var i = 0; i < response.data.orgs.length; i++) {
-                    var org = response.data.orgs[i];
-                    CacheService.put(['org', org.id], org, true);
-                    orgs.push(CacheService.get(['org', org.id]));
-                }
-                CacheService.put(key, orgs, false);
-                deferred.resolve(CacheService.get(key));
-            }, function(response) {
-                URLService.handleHttpStatus(response.data, response.status, response.headers, response.config, deferred);
-            }).finally(function() {
+            $http.get(URLService.getOrgsURL(), {headers: URLService.getHeaders()})
+                .then(function(response) {
+                    var orgs = [];
+                    for (var i = 0; i < response.data.length; i++) {
+                        var org = response.data[i];
+                        CacheService.put(['org', org.id], org, true);
+                        orgs.push(CacheService.get(['org', org.id]));
+                    }
+                    CacheService.put(key, orgs, false);
+                    deferred.resolve(CacheService.get(key));
+                }, function(response) {
+                    URLService.handleHttpStatus(response.data, response.status, response.headers, response.config, deferred);
+                }).finally(function() {
                 delete inProgress[key];
             });
         }
@@ -109,14 +109,10 @@ function ProjectService($q, $http,ApplicationService,CacheService,ElementService
             deferred.resolve(CacheService.get(cacheKey));
         } else {
             inProgress[url] = deferred.promise;
-            $http.get(url).then(function(response) {
-                if (!angular.isArray(response.data.projects)) {
-                    deferred.reject({status: 500, data: '', message: "Server Error: empty response"});
-                    return;
-                }
+            $http.get(url, {headers: URLService.getHeaders()}).then(function(response) {
                 var projects = [];
-                for (var i = 0; i < response.data.projects.length; i++) {
-                    var project = response.data.projects[i];
+                for (var i = 0; i < response.data.length; i++) {
+                    var project = response.data[i];
                     if (orgId) {
                         project.orgId = orgId;
                     }
@@ -126,7 +122,13 @@ function ProjectService($q, $http,ApplicationService,CacheService,ElementService
                 CacheService.put(cacheKey, projects, false);
                 deferred.resolve(CacheService.get(cacheKey));
             }, function(response) {
-                URLService.handleHttpStatus(response.data, response.status, response.headers, response.config, deferred);
+                if (response.status === 404) {
+                    var projects = [];
+                    CacheService.put(cacheKey, projects, false);
+                    deferred.resolve(CacheService.get(cacheKey));
+                }else {
+                    URLService.handleHttpStatus(response.data, response.status, response.headers, response.config, deferred);
+                }
             }).finally(function() {
                 delete inProgress[url];
             });
@@ -145,7 +147,7 @@ function ProjectService($q, $http,ApplicationService,CacheService,ElementService
             deferred.resolve(CacheService.get(cacheKey));
         else {
             inProgress[url] = deferred.promise;
-            $http.get(url).then(function(response) {
+            $http.get(url, {headers: URLService.getHeaders()}).then(function(response) {
                 if (!angular.isArray(response.data.projects) || response.data.projects.length === 0) {
                     deferred.reject({status: 500, data: '', message: "Server Error: empty response"});
                     return;
@@ -266,20 +268,20 @@ function ProjectService($q, $http,ApplicationService,CacheService,ElementService
         var deferred = $q.defer();
         var url = URLService.getRefsURL(projectId);
         $http.post(url, {'refs': [refOb], 'source': ApplicationService.getSource()})
-        .then(function(response) {
-            if (!angular.isArray(response.data.refs) || response.data.refs.length === 0) {
-                deferred.reject({status: 500, data: '', message: "Server Error: empty response"});
-                return;
-            }
-            var createdRef = response.data.refs[0];
-            var list = CacheService.get(['refs', projectId]);
-            if (list) {
-                list.push(createdRef);
-            }
-            deferred.resolve(CacheService.put(['ref', projectId, createdRef.id], createdRef));
-        }, function(response) {
-            URLService.handleHttpStatus(response.data, response.status, response.headers, response.config, deferred);
-        });
+            .then(function(response) {
+                if (!angular.isArray(response.data.refs) || response.data.refs.length === 0) {
+                    deferred.reject({status: 500, data: '', message: "Server Error: empty response"});
+                    return;
+                }
+                var createdRef = response.data.refs[0];
+                var list = CacheService.get(['refs', projectId]);
+                if (list) {
+                    list.push(createdRef);
+                }
+                deferred.resolve(CacheService.put(['ref', projectId, createdRef.id], createdRef));
+            }, function(response) {
+                URLService.handleHttpStatus(response.data, response.status, response.headers, response.config, deferred);
+            });
         return deferred.promise;
     };
 
@@ -287,16 +289,16 @@ function ProjectService($q, $http,ApplicationService,CacheService,ElementService
         var deferred = $q.defer();
         var url = URLService.getRefsURL(projectId);
         $http.post(url, {'refs': [refOb], 'source': ApplicationService.getSource()})
-        .then(function(response) {
-            if (!angular.isArray(response.data.refs) || response.data.refs.length === 0) {
-                deferred.reject({status: 500, data: '', message: "Server Error: empty response"});
-                return;
-            }
-            var resp = response.data.refs[0];
-            deferred.resolve(CacheService.put(['ref', projectId, resp.id], resp, true));
-        }, function(response) {
-            URLService.handleHttpStatus(response.data, response.status, response.headers, response.config, deferred);
-        });
+            .then(function(response) {
+                if (!angular.isArray(response.data.refs) || response.data.refs.length === 0) {
+                    deferred.reject({status: 500, data: '', message: "Server Error: empty response"});
+                    return;
+                }
+                var resp = response.data.refs[0];
+                deferred.resolve(CacheService.put(['ref', projectId, resp.id], resp, true));
+            }, function(response) {
+                URLService.handleHttpStatus(response.data, response.status, response.headers, response.config, deferred);
+            });
         return deferred.promise;
     };
 
@@ -439,45 +441,45 @@ function ProjectService($q, $http,ApplicationService,CacheService,ElementService
 
     var getMetatypeFilter = function(projectId, refId) {
         return {
-        "size": 0,
-        "aggs": {
-          "stereotypedElements": {
-              "filter": { "bool": {
-                  "must": [
-                      {"term": {"_projectId": projectId}},
-                      {"term": {"_inRefIds": refId}},
-                      {"exists": {"field": "_appliedStereotypeIds"}}
-                  ],
-                  "must_not": metatypeFilterMustNotList
-              }},
-              "aggs": {
-                  "stereotypeIds": {
-                      "terms": {
-                          "field": "_appliedStereotypeIds",
-                          "size": 20
-                      }
-                  }
-              }
-          },
-         "elements": {
-              "filter": { "bool": {
-                  "must": [
-                      {"term": {"_projectId": projectId}},
-                      {"term": {"_inRefIds": refId}}
-                  ],
-                 "must_not" : metatypeFilterMustNotList
-              }},
-              "aggs": {
-                  "types": {
-                      "terms": {
-                          "field": "type",
-                          "size": 20
-                      }
-                  }
-              }
-          }
-        }
-      };
+            "size": 0,
+            "aggs": {
+                "stereotypedElements": {
+                    "filter": { "bool": {
+                            "must": [
+                                {"term": {"_projectId": projectId}},
+                                {"term": {"_inRefIds": refId}},
+                                {"exists": {"field": "_appliedStereotypeIds"}}
+                            ],
+                            "must_not": metatypeFilterMustNotList
+                        }},
+                    "aggs": {
+                        "stereotypeIds": {
+                            "terms": {
+                                "field": "_appliedStereotypeIds",
+                                "size": 20
+                            }
+                        }
+                    }
+                },
+                "elements": {
+                    "filter": { "bool": {
+                            "must": [
+                                {"term": {"_projectId": projectId}},
+                                {"term": {"_inRefIds": refId}}
+                            ],
+                            "must_not" : metatypeFilterMustNotList
+                        }},
+                    "aggs": {
+                        "types": {
+                            "terms": {
+                                "field": "type",
+                                "size": 20
+                            }
+                        }
+                    }
+                }
+            }
+        };
     };
 
     var reset = function() {
