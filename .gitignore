@@ -15,3 +15,7 @@ PhantomJS_*
 Chrome_*
 test-results/
 angular-mms-grunt-servers.json
+certs/*
+.bowerrc
+app/assets/*._t_
+package-lock.json

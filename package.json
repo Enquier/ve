@@ -2,10 +2,12 @@
   "name": "mms-ve",
   "description": "mms ve module",
   "repository": "https://github.com/Open-MBEE/ve.git",
+  "license": "Apache 2.0",
   "devDependencies": {
     "babel-polyfill": "^6.26.0",
     "compression": "^1.7.1",
     "connect-livereload": "^0.6.0",
+    "connect-modrewrite": "^0.10.2",
     "grunt": "^1.0.1",
     "grunt-artifactory-artifact": "~1.0.1",
     "grunt-bower-install-simple": "1.2.4",
@@ -43,7 +45,8 @@
     "karma-phantomjs-launcher": "^1.0.4",
     "phantomjs-prebuilt": "^2.1.16",
     "protractor": "~5.2.0",
-    "time-grunt": "^1.4.0"
+    "time-grunt": "^1.4.0",
+    "serve-static": "^1.13.2"
   },
   "dependencies": {
     "c3": "^0.5.4",

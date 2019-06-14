@@ -12,14 +12,6 @@ function($scope, $timeout, $location, $rootScope, $state, _, $window, $uibModal,
     $rootScope.ve_fn = false;
 
     var modalOpen = false;
-    var host = $location.host();
-    // if (host.indexOf('europaems') !== -1 || host.indexOf('arrmems') !== -1 || host.indexOf('msmems') !== -1) {
-    //     $rootScope.ve_footer = 'The technical data in this document is controlled under the U.S. Export Regulations, release to foreign persons may require an export authorization.';
-    // }
-    if (host.indexOf('fn') !== -1){
-        $rootScope.ve_footer = 'JPL/Caltech PROPRIETARY — Not for Public Release or Redistribution. No export controlled documents allowed on this server. <a target="_blank" href="https://wiki.jpl.nasa.gov/x/GaByE">More</a>';
-        $rootScope.ve_fn = true;
-    }
 
     $window.addEventListener('beforeunload', function(event) {
         if ($rootScope.ve_edits && !_.isEmpty($rootScope.ve_edits)) {
@@ -70,10 +62,10 @@ function($scope, $timeout, $location, $rootScope, $state, _, $window, $uibModal,
                 return;
             modalOpen = true;
             $uibModal.open({
-                template: '<div class="modal-header"><h4>You have been logged out, please login again.</h4></div><div class="modal-body"><form name="loginForm" ng-submit="login(credentials)">' + 
-                                '<input type="text" class="form-control" ng-model="credentials.username" placeholder="Username" style="margin-bottom: 1.5em;" autofocus>' + 
-                                '<input type="password" class="form-control" ng-model="credentials.password" placeholder="Password" style="margin-bottom: 1.5em;">' + 
-                                '<button class="btn btn-block btn-primary" type="submit">LOG IN <span ng-if="spin" ><i class="fa fa-spin fa-spinner"></i>' + 
+                template: '<div class="modal-header"><h4>You have been logged out, please login again.</h4></div><div class="modal-body"><form name="loginForm" ng-submit="login(credentials)">' +
+                                '<input type="text" class="form-control" ng-model="credentials.username" placeholder="Username" style="margin-bottom: 1.5em;" autofocus>' +
+                                '<input type="password" class="form-control" ng-model="credentials.password" placeholder="Password" style="margin-bottom: 1.5em;">' +
+                                '<button class="btn btn-block btn-primary" type="submit">LOG IN <span ng-if="spin" ><i class="fa fa-spin fa-spinner"></i>' +
                             '</span></button></form></div>',
                 scope: $scope,
                 backdrop: 'static',

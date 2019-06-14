@@ -87,7 +87,7 @@ function veNav($templateCache, $rootScope, $state, hotkeys, growl, $location, $u
             hotkeys.toggleCheatSheet();
         };
         scope.toggleAbout = function() {
-            scope.veV = '3.5.1';
+            scope.veV = '3.5.3';
             scope.mmsV = 'Loading...';
             ApplicationService.getMmsVersion().then(function(data) {
                 scope.mmsV = data;
@@ -136,6 +136,9 @@ function veNav($templateCache, $rootScope, $state, hotkeys, growl, $location, $u
         };
         AuthService.checkLogin().then(function(data) {
             scope.username = data;
+            AuthService.getUserData(data).then(function(userData){
+                scope.user = userData;
+            });
         });
         
     };

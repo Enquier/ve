@@ -139,6 +139,7 @@ function mmsCkeditor($uibModal, $templateCache, $timeout, growl, CKEDITOR, _, Ca
             $scope.showProposeLink = false;
             $scope.searchExisting = true;
             $scope.suppressNumbering = false;
+            $scope.suppressName = true;
             $scope.linkType = 1;
             $scope.linkText = '';
 
@@ -154,11 +155,20 @@ function mmsCkeditor($uibModal, $templateCache, $timeout, growl, CKEDITOR, _, Ca
                 if (peid) {
                     tag += ' mms-pe-id="' + peid + '"';
                 }
+                if ($scope.linkType == 1) {
+                    tag += ' suppress-numbering="false"';
+                    tag += ' show-name="false"';
+                }
                 if ($scope.linkType == 2) {
                     tag += ' suppress-numbering="true"';
+                    tag += ' show-name="true"';
                 }
                 if ($scope.linkType == 3 && $scope.linkText) {
                     tag += ' link-text="' + $scope.linkText + '"';
+                }
+                if ($scope.linkType == 4) {
+                    tag += ' suppress-numbering="false"';
+                    tag += ' show-name="true"';
                 }
                 tag += '>[cf:' + elem.name + '.vlink]</mms-view-link>';
                 return tag;

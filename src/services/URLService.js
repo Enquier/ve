@@ -457,6 +457,10 @@ function urlService(baseUrl, mmsUrl) {
         return root + '/mms/login/ticket/' + t; //TODO remove when server returns 404
     };
 
+    var getPersonURL = function(username) {
+        return addTicket(root + '/api/people/' + username);
+    };
+
         /**
      * @ngdoc method
      * @name mms.URLService#handleHttpStatus
@@ -613,6 +617,7 @@ function urlService(baseUrl, mmsUrl) {
         getJobInstancesURL: getJobInstancesURL,
         getCheckLoginURL: getCheckLoginURL,
         getCheckTicketURL: getCheckTicketURL,
+        getPersonURL: getPersonURL,
         getLogoutURL: getLogoutURL,
         handleHttpStatus: handleHttpStatus,
     };

@@ -1,262 +1,280 @@
 module.exports = function(grunt) {
 
-  require('time-grunt')(grunt);
-  require('jit-grunt')(grunt, {
+require('time-grunt')(grunt);
+require('jit-grunt')(grunt, {
     // static mapping for tasks that don't match their modules' name
     useminPrepare: 'grunt-usemin',
     configureProxies: 'grunt-connect-proxy-updated',
     artifactory: 'grunt-artifactory-artifact'
-  });
+});
 
-  var jsFiles = ['app/js/**/*.js', 'src/directives/**/*.js', 'src/services/*.js'];
+var jsFiles = ['app/js/**/*.js', 'src/directives/**/*.js', 'src/services/*.js'];
 
-  var artifactoryUrl = grunt.option('ARTIFACTORY_URL');
-  var artifactoryUser = grunt.option('ARTIFACTORY_USER');
-  var artifactoryPassword = grunt.option('ARTIFACTORY_PASSWORD');
-  var snapshotRepo = grunt.option('SNAPSHOT_REPO');
-  var releaseRepo = grunt.option('RELEASE_REPO');
-  var groupId = grunt.option('GROUP_ID');
+var artifactoryUrl = grunt.option('ARTIFACTORY_URL');
+var artifactoryUser = grunt.option('ARTIFACTORY_USER');
+var artifactoryPassword = grunt.option('ARTIFACTORY_PASSWORD');
+var snapshotRepo = grunt.option('SNAPSHOT_REPO');
+var releaseRepo = grunt.option('RELEASE_REPO');
+var groupId = grunt.option('GROUP_ID');
 
-  var connectObject = {
+var connectObject = {
     docs: {
-      options: {
-        hostname: 'localhost',
-        port: 10000,
-        base: './dist/docs'
-      }
-    }
-  };
-
-  if (grunt.file.exists('angular-mms-grunt-servers.json')) {
-    var servers = grunt.file.readJSON('angular-mms-grunt-servers.json');
-
-    // Set proxie info for server list
-    for (var key in servers) {
-      var serverPort = 443;
-      var serverHttps = true;
-      if (key === "localhost") {
-        serverPort = 8080;
-        serverHttps = false;
-      }
-      connectObject[key] = {
         options: {
-          hostname: '*',
-          port: 9000,
-          open: true,
-          base: {
-            path: './dist',
-            options: {
-              // Add this so that the browser doesn't re-validate static resources
-              // Also, we have cache-busting, so we don't have to worry about stale resources
-              maxAge: 31536000000
+            hostname: '*',
+            port: 10000,
+            base: './dist/docs'
+        }
+    }
+};
+
+if (grunt.file.exists('angular-mms-grunt-servers.json')) {
+    var server = grunt.file.readJSON('angular-mms-grunt-servers.json');
+    var serverPort = server.mms_port;
+    var serverHttps = true;
+    var serveStatic = require('serve-static');
+    var modRewrite = require('connect-modrewrite');
+    connectObject["docker"] = {
+        options: {
+            hostname: 'localhost',
+            port: 9000,
+            protocol: 'http',
+            //open: true,
+            //key: grunt.file.read('/run/secrets/server.key').toString(),
+            //cert: grunt.file.read('/run/secrets/server.crt').toString(),
+            ca: grunt.file.read('certs/TrustStore.pem').toString(),
+            base: {
+                path: './dist',
+                options: {
+                    index: 'mms.html',
+                    // Add this so that the browser doesn't re-validate static resources
+                    // Also, we have cache-busting, so we don't have to worry about stale resources
+                    maxAge: 31536000000
+                }
+            },
+            middleware: function(connect, options) {
+                var middlewares;
+                middlewares = [];
+                if (!Array.isArray(options.base)) {
+                    options.base = [options.base];
+                }
+                middlewares.push(
+                    require('grunt-connect-proxy-updated/lib/utils').proxyRequest,
+                    // add gzip compression to local server to reduce static resources' size and improve load speed
+                    require('compression')()
+                    //require('connect-modrewrite')(['!\\.html|\\.js|\\.css|\\.svg|\\.jp(e?)g|\\.png|\\.gif$ /mms.html']),
+
+                    // need to add livereload as a middleware at this specific order to avoid issues with other middlewares
+                );
+                middlewares.push( modRewrite( ['^[^\\.]*$ /mms.html [L]'] ) );
+                options.base.forEach(function(base) {
+                    // Serve static files.
+                    var path = base.path || base;
+                    var staticOptions = base.options || defaultStaticOptions;
+                    middlewares.push(serveStatic(path, staticOptions));
+                });
+                return middlewares;
             }
-          },
-          middleware: function (connect, options, middlewares) {
-            middlewares.unshift(
-              require('grunt-connect-proxy-updated/lib/utils').proxyRequest,
-              // add gzip compression to local server to reduce static resources' size and improve load speed
-              require('compression')(),
-              // need to add livereload as a middleware at this specific order to avoid issues with other middlewares
-              require('connect-livereload')());
-            return middlewares;
-          }
         },
         proxies: [
-          {
-            context: '/mms-ts',
-            host: 'mms-ts-uat.jpl.nasa.gov',//'localhost',//'100.64.243.161',
-            port: 8080
-          },
-          {
-            context: '/xlrapi',
-            https: serverHttps,
-            host: servers[key],
-            port: serverPort
-          },
-          {
-            context: '/alfresco',  // '/api'
-            host: servers[key],
-            changeOrigin: true,
-            https: serverHttps,
-            port: serverPort
-          }
-        ]
-      };
-    }
-  }
-
-  var combineCustomJS = {
-        options: {
-            banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd HH:MM:ss") %> */\n',
-                wrap: 'mms',
-                mangle: true,
-                sourceMap: {
-                includeSources: true
+            //{
+            //context: '/mms-ts',
+            //host: 'localhost',
+            //port: 8080
+            //},
+            {
+                context: '/alfresco',  // '/api'
+                protocol: 'https:',
+                host: server.mms_host,
+                changeOrigin: true,
+                secure: false,
+                https: serverHttps,
+                port: serverPort
+            },
+            {
+                context: '/share',  // '/api'
+                protocol: 'https:',
+                host: server.mms_host,
+                changeOrigin: true,
+                secure: false,
+                https: serverHttps,
+                port: serverPort
             }
-        },
-        files: {
-            'dist/js/ve-mms.min.js': [
+        ]
+    };
+}
 
-                // mms module
-                'src/mms.js',
-                'src/services/*.js',
-                'src/filters/*.js',
-
-                // mms.directives module (need mms, mms.directives.tpls.js module )
-                'dist/jsTemp/mms.directives.tpls.js',
-                'src/mms.directives.js',
-                'src/directives/**/*.js',
-
-                // app module ( need app.tpls.js, mms, mms.directives module )
-                'dist/jsTemp/app.tpls.js',
-                'app/js/mms/app.js',
-                'app/js/mms/controllers/*.js',
-                'app/js/mms/directives/*.js'
-            ]
+var combineCustomJS = {
+    options: {
+        banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd HH:MM:ss") %> */\n',
+        wrap: 'mms',
+        mangle: true,
+        sourceMap: {
+            includeSources: true
         }
-  };
-  // Project configuration.
-  grunt.initConfig({
+    },
+    files: {
+        'dist/js/ve-mms.min.js': [
+
+            // mms module
+            'src/mms.js',
+            'src/services/*.js',
+            'src/filters/*.js',
+
+            // mms.directives module (need mms, mms.directives.tpls.js module )
+            'dist/jsTemp/mms.directives.tpls.js',
+            'src/mms.directives.js',
+            'src/directives/**/*.js',
+
+            // app module ( need app.tpls.js, mms, mms.directives module )
+            'dist/jsTemp/app.tpls.js',
+            'app/js/mms/app.js',
+            'app/js/mms/controllers/*.js',
+            'app/js/mms/directives/*.js'
+        ]
+    }
+};
+// Project configuration.
+grunt.initConfig({
 
     pkg: grunt.file.readJSON('package.json'),
 
     concurrent: {
-      devStep1: ['install', 'lint', 'clean:before'],
-      devStep2: [['copy:all', 'processExternalDepsDevMode'], 'processAppStyleSheets', 'processAppJSInDev'],
-      devStep3: ['copy:dev'],
-      devStep4: ['clean:devAfter', 'cacheBust'],
+        devStep1: ['install', 'lint', 'clean:before'],
+        devStep2: [['copy:all', 'processExternalDepsDevMode'], 'processAppStyleSheets', 'processAppJSInDev'],
+        devStep3: ['copy:dev'],
+        devStep4: ['clean:devAfter', 'cacheBust'],
 
-      releaseStep1: ['install', 'lint', 'clean:before'],
-      releaseStep2: [['copy:all', 'processExternalDeps'], 'processAppStyleSheets', 'processAppJSInProd' ],
-      releaseStep3: ['clean:releaseAfter', 'cacheBust']
+        releaseStep1: ['install', 'lint', 'clean:before'],
+        releaseStep2: [['copy:all', 'processExternalDeps'], 'processAppStyleSheets', 'processAppJSInProd' ],
+        releaseStep3: ['clean:releaseAfter', 'cacheBust']
     },
 
     clean: {
-      before: {
-        src: ['dist']
-      },
-      releaseAfter: {
-        src: ['dist/bower_components', 'dist/concat', 'dist/cssTemp', 'dist/jsTemp']
-      },
-      devAfter: {
-        src: ['dist/concat', 'dist/cssTemp', 'dist/jsTemp']
-      }
+        before: {
+            src: ['dist']
+        },
+        releaseAfter: {
+            src: ['dist/bower_components', 'dist/concat', 'dist/cssTemp', 'dist/jsTemp']
+        },
+        devAfter: {
+            src: ['dist/concat', 'dist/cssTemp', 'dist/jsTemp']
+        }
     },
 
     'bower-install-simple': {
-      options: {
-        color: true,
-        cwd: './app', // where to look for bower.json
-        directory: 'bower_components' // where to store these libs,
-      },
-      all: {}
+        options: {
+            color: true,
+            cwd: './app', // where to look for bower.json
+            directory: 'bower_components' // where to store these libs,
+        },
+        all: {}
     },
 
     copy: {
-      all: {
-        files: [
+        all: {
+            files: [
 
-          // Entry html files
-          {expand: true, cwd: 'app', src: ['mms.html', 'index.html'], dest: 'dist/'},
+                // Entry html files
+                {expand: true, cwd: 'app', src: ['mms.html', 'index.html'], dest: 'dist/'},
 
-          // External deps
-          {expand: true, cwd: 'app', src: ['bower.json', 'bower_components/**'], dest: 'dist/'},
+                // External deps
+                {expand: true, cwd: 'app', src: ['bower.json', 'bower_components/**'], dest: 'dist/'},
 
-          // Internal deps
-          {expand: true, cwd: 'app/lib', src: '**', dest: 'dist/lib'},
-          {expand: true, cwd: 'src/lib/', src: ['**', '!bootstrap-sass-3.3.7/**'], dest: 'dist/lib'},
+                // Internal deps
+                {expand: true, cwd: 'app/lib', src: '**', dest: 'dist/lib'},
+                {expand: true, cwd: 'src/lib/', src: ['**', '!bootstrap-sass-3.3.7/**'], dest: 'dist/lib'},
 
-          // Assets
-          {expand: true, cwd: 'app/bower_components/font-awesome-bower/fonts', src: '**', dest: 'dist/fonts'},
-          {expand: true, cwd: 'app/assets', src: ['*', '!styles'], dest: 'dist/assets'},
-          {expand: true, cwd: 'src/assets', src: ['images/**'], dest: 'dist/assets'}
-        ]
-      },
-      dev: {
-        files: [
-          {expand: true, cwd: 'dist/concat/js', src: ['vendor.min.js'], dest: 'dist/js'},
-          {expand: true, cwd: 'dist/concat/js', src: ['vendor-internal.min.js'], dest: 'dist/js'}
-        ]
-      }
+                // Assets
+                {expand: true, cwd: 'app/bower_components/font-awesome-bower/fonts', src: '**', dest: 'dist/fonts'},
+                {expand: true, cwd: 'app/assets', src: ['*', '!styles'], dest: 'dist/assets'},
+                {expand: true, cwd: 'src/assets', src: ['images/**'], dest: 'dist/assets'}
+            ]
+        },
+        dev: {
+            files: [
+                {expand: true, cwd: 'dist/concat/js', src: ['vendor.min.js'], dest: 'dist/js'},
+                {expand: true, cwd: 'dist/concat/js', src: ['vendor-internal.min.js'], dest: 'dist/js'}
+            ]
+        }
     },
 
     /** Looks at dist/bower.json & all bower_components's bower.json to determine the order at which to include external libs **/
     wiredep: {
-      all: {
-        options: {
-          cwd: 'dist',
-          directory: '',
-          dependencies: true,
-          devDependencies: false, // so that our final vendor bundle doesn't include devDep libs
-          exclude: [],
-          fileTypes: {},
-          ignorePath: '',
-          overrides: {}
-        },
-        src: ['dist/*.html']
-      }
+        all: {
+            options: {
+                cwd: 'dist',
+                directory: '',
+                dependencies: true,
+                devDependencies: false, // so that our final vendor bundle doesn't include devDep libs
+                exclude: [],
+                fileTypes: {},
+                ignorePath: '',
+                overrides: {}
+            },
+            src: ['dist/*.html']
+        }
     },
 
     /** Work on top of wiredep to know which external libs to bundle.
      *  Delegate the concatenation and minification steps to other plugins **/
     useminPrepare: {
-      options: {
-        staging: 'dist'
-      },
-      html: 'dist/mms.html'
+        options: {
+            staging: 'dist'
+        },
+        html: 'dist/mms.html'
     },
 
     /** Inject the final bundle into the corresponding html files **/
     usemin: {
-      html: ['dist/mms.html']
+        html: ['dist/mms.html']
     },
 
     /** Transpile Sass to Css **/
     sass: {
-      all: {
-        files: {
-          'dist/cssTemp/mms.css': 'src/assets/styles/mms-main.scss',
-          'dist/cssTemp/ve-main.css': 'app/assets/styles/ve/ve-main.scss'
+        all: {
+            files: {
+                'dist/cssTemp/mms.css': 'src/assets/styles/mms-main.scss',
+                'dist/cssTemp/ve-main.css': 'app/assets/styles/ve/ve-main.scss'
+            }
         }
-      }
     },
 
     /** Concat + Minify CSS **/
     cssmin: {
-      all: {
-        files: {
-          'dist/css/ve-mms.min.css': ['dist/cssTemp/mms.css', 'dist/cssTemp/ve-main.css']
+        all: {
+            files: {
+                'dist/css/ve-mms.min.css': ['dist/cssTemp/mms.css', 'dist/cssTemp/ve-main.css']
+            }
         }
-      }
     },
 
     /** This task is for turning all html files into angularjs modules which are included as dependencies
      * for a particular module specified in the module function below
      * **/
     html2js: {
-      options: {
-        module: function(modulePath, taskName) {
-          if (taskName === 'directives')
-            return 'mms.directives.tpls';
-          return 'app.tpls';
+        options: {
+            module: function(modulePath, taskName) {
+                if (taskName === 'directives')
+                    return 'mms.directives.tpls';
+                return 'app.tpls';
+            },
+            rename: function (modulePath) {
+                if (modulePath.indexOf('directives/templates') > -1) {
+                    var moduleName = modulePath.replace('directives/templates/', '');
+                    return 'mms/templates/' + moduleName;
+                }
+                return modulePath.replace('app/', '').replace('../', '');
+            }
         },
-        rename: function (modulePath) {
-          if (modulePath.indexOf('directives/templates') > -1) {
-            var moduleName = modulePath.replace('directives/templates/', '');
-            return 'mms/templates/' + moduleName;
-          }
-          return modulePath.replace('app/', '').replace('../', '');
+        // This task name need to match with taskName param above.
+        directives: {
+            src: ['src/directives/templates/*.html'],
+            dest: 'dist/jsTemp/mms.directives.tpls.js'
+        },
+        app: {
+            src: ['app/partials/mms/*.html'],
+            dest: 'dist/jsTemp/app.tpls.js'
         }
-      },
-      // This task name need to match with taskName param above.
-      directives: {
-        src: ['src/directives/templates/*.html'],
-        dest: 'dist/jsTemp/mms.directives.tpls.js'
-      },
-      app: {
-        src: ['app/partials/mms/*.html'],
-        dest: 'dist/jsTemp/app.tpls.js'
-      }
     },
 
     // concat only (no minification )
@@ -266,19 +284,19 @@ module.exports = function(grunt) {
 
     /** Concat + Minify JS files **/
     uglify: {
-      combineCustomJS: combineCustomJS,
+        combineCustomJS: combineCustomJS,
 
-      // this target is for files handled by usemin task.
-      generated: {
-        options: {
-          mangle: true
-          // Uncomment below codes to get source map files for vendor codes if desired ( no need to enable this for during
-          // development since vendor files are not minified for dev-build )
-          // sourceMap: {
-          //     includeSources: true
-          // }
+        // this target is for files handled by usemin task.
+        generated: {
+            options: {
+                mangle: true
+                // Uncomment below codes to get source map files for vendor codes if desired ( no need to enable this for during
+                // development since vendor files are not minified for dev-build )
+                // sourceMap: {
+                //     includeSources: true
+                // }
+            }
         }
-      }
     },
 
     /** Add hashing to static resources' names so that the browser doesn't use the stale cached resources **/
@@ -353,7 +371,7 @@ module.exports = function(grunt) {
     artifactory: {
       options: {
         url: artifactoryUrl,
-        repository: snapshotRepo, //releaseRepo,
+        repository: releaseRepo,
         username: artifactoryUser,
         password: artifactoryPassword
       },
@@ -364,7 +382,7 @@ module.exports = function(grunt) {
         options: {
           publish: [{
             id: groupId + ':ve:zip',
-            version: '3.5.1-SNAPSHOT',
+            version: '3.5.3',
             path: 'deploy/'
           }]
         }

@@ -66,6 +66,22 @@ function AuthService($q, $http, CacheService, URLService, HttpService, ElementSe
         return deferred.promise;
     };
 
+    var getUserData = function(username){
+        var deferred = $q.defer();
+        if (!ticket) {
+            deferred.reject(false);
+            return deferred.promise;
+        }
+
+        $http.get(URLService.getPersonURL(username)).then(function (success) {
+            deferred.resolve(success.data);
+        }, function(fail){
+            deferred.reject(fail);
+            removeTicket();
+        });
+        return deferred.promise;
+    };
+
     var logout = function() {
         var deferred = $q.defer();
         checkLogin().then(function() {
@@ -83,6 +99,7 @@ function AuthService($q, $http, CacheService, URLService, HttpService, ElementSe
         getTicket: getTicket,
         removeTicket: removeTicket,
         checkLogin: checkLogin,
+        getUserData: getUserData,
         logout: logout
     };
 

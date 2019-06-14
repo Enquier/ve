@@ -73,17 +73,31 @@ angular.module('mmsApp', ['mms', 'mms.directives', 'app.tpls', 'fa.directive.bor
     $stateProvider
     .state('login', {
         url: '/login',
-        resolve: { },
+        resolve: {
+            bannerOb: ['BrandingService', function(BrandingService) {
+                return BrandingService.getBanner();
+            }],
+            loginBannerOb: ['BrandingService', function(BrandingService) {
+                return BrandingService.getLoginBanner();
+            }],
+        },
         views: {
+            'banner@': {
+                template: '<ve-system-banner mms-banner="banner"></ve-system-banner>',
+                controller: ['$scope', 'bannerOb', function($scope, bannerOb){
+                    $scope.banner = bannerOb;
+                }]
+            },
             'login@': {
                 templateUrl: 'partials/mms/login.html',
-                controller: ['$scope', '$rootScope', '$state', 'AuthService', 'growl', function ($scope, $rootScope, $state, AuthService, growl) {
+                controller: ['$scope', '$rootScope', '$state', 'AuthService', 'loginBannerOb', 'growl', function ($scope, $rootScope, $state, AuthService, loginBannerOb, growl) {
                     $scope.credentials = {
                       username: '',
                       password: ''
                     };
                     $rootScope.ve_title = 'Login';
                     $scope.pageTitle = 'View Editor';
+                    $scope.loginBanner = loginBannerOb.labels;
                     $scope.spin = false;
                     $scope.login = function (credentials) {
                         $scope.spin = true;
@@ -143,18 +157,28 @@ angular.module('mmsApp', ['mms', 'mms.directives', 'app.tpls', 'fa.directive.bor
                 });
                 return deferred.promise;
             }],
+            bannerOb: ['BrandingService', function(BrandingService) {
+                return BrandingService.getBanner();
+            }],
             orgObs: ['$stateParams', 'ProjectService', 'ticket', function($stateParams, ProjectService, ticket) {
                 return ProjectService.getOrgs();
             }]
         },
         views: {
+            'banner@': {
+                template: '<ve-system-banner mms-banner="banner"></ve-system-banner>',
+                controller: ['$scope', 'bannerOb', function($scope, bannerOb){
+                    $scope.banner = bannerOb;
+                }]
+            },
             'login@': {
                 templateUrl: 'partials/mms/select.html',
-                controller: ['$scope', '$rootScope', '$state', '$stateParams', 'orgObs', 'ProjectService', 'AuthService', 'growl', '$localStorage', function($scope, $rootScope, $state, $stateParams, orgObs, ProjectService, AuthService, growl, $localStorage) {
+                controller: ['$scope', '$rootScope', '$state', '$stateParams', 'orgObs', 'ProjectService', 'AuthService','loginBannerOb', 'growl', '$localStorage', function($scope, $rootScope, $state, $stateParams, orgObs, ProjectService, AuthService, loginBannerOb, growl, $localStorage) {
                     $rootScope.ve_title = 'Projects';
                     $scope.pageTitle = 'View Editor';
                     $scope.fromLogin = $stateParams.fromLogin;
                     $localStorage.$default({org: orgObs[0]});
+                    $scope.loginBanner = loginBannerOb.labels;
                     $scope.spin = false;
                     $scope.orgs = orgObs;
                     var orgId, projectId;
@@ -264,6 +288,9 @@ angular.module('mmsApp', ['mms', 'mms.directives', 'app.tpls', 'fa.directive.bor
                 }
                 return ret;
             }],
+            bannerOb: ['BrandingService', function(BrandingService) {
+                return BrandingService.getBanner();
+            }],
             refOb: function() { return null;},
             tagOb: function() { return null;},
             branchOb: function() { return null;},
@@ -272,6 +299,12 @@ angular.module('mmsApp', ['mms', 'mms.directives', 'app.tpls', 'fa.directive.bor
             search: function(){ return null;}
         },
         views: {
+            'banner@': {
+                template: '<ve-system-banner mms-banner="banner"></ve-system-banner>',
+                controller: ['$scope', 'bannerOb', function($scope, bannerOb){
+                    $scope.banner = bannerOb;
+                }]
+            },
             'nav@': {
                 template: '<ve-nav mms-title="ve_title" mms-org="org" mms-project="project" mms-projects="projects" mms-ref="ref" mms-branch="branch" mms-branches="branches" mms-tag="tag" mms-tags="tags" mms-search="search"></ve-nav>',
                 controller: ['$scope', '$rootScope', 'orgOb', 'projectOb', 'projectObs', 'refOb', 'branchOb', 'branchObs', 'tagOb', 'tagObs', 'search', function ($scope, $rootScope, orgOb, projectOb, projectObs, refOb, branchOb, branchObs, tagOb, tagObs, search) {
@@ -413,11 +446,23 @@ angular.module('mmsApp', ['mms', 'mms.directives', 'app.tpls', 'fa.directive.bor
                 }
                 return $stateParams.search;
             }],
+            bannerOb: ['BrandingService', function(BrandingService) {
+                return BrandingService.getBanner();
+            }],
+            footerOb: ['BrandingService', function(BrandingService) {
+                return BrandingService.getFooter();
+            }],
             docMeta: [function(){
                 return {};
             }]
         },
         views: {
+            'banner@': {
+                template: '<ve-system-banner mms-banner="banner"></ve-system-banner>',
+                controller: ['$scope', 'bannerOb', function($scope, bannerOb){
+                    $scope.banner = bannerOb;
+                }]
+            },
             'nav@': {
                 template: '<ve-nav mms-title="ve_title" mms-org="org" mms-project="project" mms-projects="projects" mms-ref="ref" mms-branch="branch" mms-branches="branches" mms-tag="tag" mms-tags="tags" mms-search="search"></ve-nav>',
                 controller: ['$scope', '$rootScope', 'orgOb', 'projectOb', 'projectObs', 'refOb', 'branchOb', 'branchObs', 'tagOb', 'tagObs', 'search', function ($scope, $rootScope, orgOb, projectOb, projectObs, refOb, branchOb, branchObs, tagOb, tagObs, search) {
@@ -465,6 +510,12 @@ angular.module('mmsApp', ['mms', 'mms.directives', 'app.tpls', 'fa.directive.bor
             'toolbar-right@': {
                 template: '<mms-toolbar buttons="buttons" on-click="onClick(button)" mms-tb-api="tbApi"></mms-toolbar>',
                 controller: 'ToolbarCtrl'
+            },
+            'footer@': {
+                template: '<ve-footer mms-footer="footer" ng-if="ve_footer"></ve-footer>',
+                controller: ['$scope', 'footerOb', function ($scope, footerOb) {
+                    $scope.footer = footerOb;
+                }]
             }
         }
     })
@@ -491,6 +542,9 @@ angular.module('mmsApp', ['mms', 'mms.directives', 'app.tpls', 'fa.directive.bor
     .state('project.ref.preview', {
         url: '/document/:documentId',
         resolve: {
+            projectOb: ['$stateParams', 'ProjectService', 'ticket', function($stateParams, ProjectService, ticket) {
+                return ProjectService.getProjectMounts($stateParams.projectId, $stateParams.refId);
+            }],
             documentOb: ['$stateParams', '$q', 'ElementService', 'ViewService', 'refOb', 'ticket', function($stateParams, $q, ElementService, ViewService, refOb, ticket) {
                 var deferred = $q.defer();
                 var eid = $stateParams.documentId;
