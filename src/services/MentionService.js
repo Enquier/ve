@@ -17,8 +17,8 @@ function MentionService($rootScope, $compile, $timeout, moment, CacheService, Vi
         hasMentionResults: hasMentionResults
     };
 
-    function getFastCfListing(projectId, refId) {
-        return CacheService.getLatestElements(projectId, refId).reduce(function(result, cacheElement) {
+    function getFastCfListing(orgId, projectId, refId) {
+        return CacheService.getLatestElements(orgId, projectId, refId).reduce(function(result, cacheElement) {
             var elementType = ViewService.getElementType(cacheElement);
             var iconClass = UtilsService.getElementTypeClass(cacheElement, elementType);
             result.push({id: cacheElement.id, name: cacheElement.name, type: 'name',
@@ -117,7 +117,7 @@ function MentionService($rootScope, $compile, $timeout, moment, CacheService, Vi
                 mmsProjectId: projectId,
                 mmsRefId: refId
             });
-        var element = $compile('<span mms-mention mms-editor="mmsEditor" mms-mention-value="mmsMentionValue" mms-mention-id="mmsMentionId" mms-project-id="mmsProjectId" mms-ref-id="mmsRefId"></span>')(newScope);
+        var element = $compile('<span mms-mention mms-editor="mmsEditor" mms-mention-value="mmsMentionValue" mms-mention-id="mmsMentionId" mms-org-id="mmsOrgId" mms-project-id="mmsProjectId" mms-ref-id="mmsRefId"></span>')(newScope);
         return {
             scope: newScope,
             controller: element.controller('mms-mention'),
@@ -228,8 +228,8 @@ function MentionService($rootScope, $compile, $timeout, moment, CacheService, Vi
         }
     }
 
-    function _getMentionItem(key, projectId, refId) {
-        var cfListing = getFastCfListing(projectId, refId);
+    function _getMentionItem(key, orgId, projectId, refId) {
+        var cfListing = getFastCfListing(orgId, projectId, refId);
         return cfListing.find(function(cf) {
             return (cf.id + cf.type) === key;
         });

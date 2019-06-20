@@ -48,7 +48,7 @@ function mmsJobs($templateCache, $http, $location, $window, growl, _, $q, $rootS
 
         // Get ref list for project and details on
         var getRefsInProgress = function() {
-            ProjectService.getRefs(scope.mmsProjectId)
+            ProjectService.getRefs(scope.mmsOrgId, scope.mmsProjectId)
             .then(function(data) {
                 scope.refList = data.filter(function(ref) {
                     if (ref.status === 'creating') {

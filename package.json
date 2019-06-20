@@ -51,5 +51,9 @@
   "dependencies": {
     "c3": "^0.5.4",
     "d3": "^5.1.0"
+  },
+  "scripts": {
+    "storybook": "start-storybook -p 6006",
+    "build-storybook": "build-storybook"
   }
 }

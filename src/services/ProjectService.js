@@ -136,13 +136,13 @@ function ProjectService($q, $http,ApplicationService,CacheService,ElementService
         return deferred.promise;
     };
 
-    var getProject = function(projectId) {
+    var getProject = function(orgId, projectId) {
         var deferred = $q.defer();
-        var url = URLService.getProjectURL(projectId);
+        var url = URLService.getProjectURL(orgId, projectId);
         if (inProgress.hasOwnProperty(url)) {
             return inProgress[url];
         }
-        var cacheKey = ['project', projectId];
+        var cacheKey = ['project', orgId, projectId];
         if (CacheService.exists(cacheKey))
             deferred.resolve(CacheService.get(cacheKey));
         else {
@@ -163,13 +163,13 @@ function ProjectService($q, $http,ApplicationService,CacheService,ElementService
         return deferred.promise;
     };
 
-    var getProjectMounts = function(projectId, refId) {
+    var getProjectMounts = function(orgId, projectId, refId) {
         var deferred = $q.defer();
-        var url = URLService.getProjectMountsURL(projectId, refId);
+        var url = URLService.getProjectMountsURL(orgId, projectId, refId);
         if (inProgress.hasOwnProperty(url)) {
             return inProgress[url];
         }
-        var cacheKey = ['project', projectId, refId];
+        var cacheKey = ['project', orgId, projectId, refId];
         if (CacheService.exists(cacheKey)) {
             deferred.resolve(CacheService.get(cacheKey));
         } else {
@@ -190,9 +190,9 @@ function ProjectService($q, $http,ApplicationService,CacheService,ElementService
         return deferred.promise;
     };
 
-    var getRefs = function(projectId) {
-        var cacheKey = ['refs', projectId];
-        var url = URLService.getRefsURL(projectId);
+    var getRefs = function(orgId, projectId) {
+        var cacheKey = ['refs', orgId, projectId];
+        var url = URLService.getRefsURL(orgId, projectId);
         if (inProgress.hasOwnProperty(url)) {
             return inProgress[url];
         }
@@ -226,9 +226,9 @@ function ProjectService($q, $http,ApplicationService,CacheService,ElementService
         return deferred.promise;
     };
 
-    var getRef = function(refId, projectId) {
+    var getRef = function(orgId, projectId, refId) {
         var deferred = $q.defer();
-        getRefs(projectId).then(function(data) {
+        getRefs(orgId, projectId).then(function(data) {
             var result = CacheService.get(['ref', projectId, refId]);
             if (result) {
                 deferred.resolve(result);

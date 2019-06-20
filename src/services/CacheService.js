@@ -52,7 +52,7 @@ function CacheService(_) {
      * @param {string} refId The branch/tag id
      * @returns {Object} Value if found, null if not found
      */
-    var getLatestElements = function(projectId, refId) {
+    var getLatestElements = function(orgId, projectId, refId) {
         var latestElements = [];
         for (var key in cache) {
             if (!cache.hasOwnProperty(key)) {

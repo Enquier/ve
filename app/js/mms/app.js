@@ -257,20 +257,20 @@ angular.module('mmsApp', ['mms', 'mms.directives', 'app.tpls', 'fa.directive.bor
                         });
                         return deferred.promise;
                     }],
-                    //orgObs: ['$stateParams', 'ProjectService', 'token', function($stateParams, ProjectService, token) {
-                    //    return ProjectService.getOrgs();
-                    //}],
+                    orgObs: ['$stateParams', 'ProjectService', 'token', function($stateParams, ProjectService, token) {
+                        return ProjectService.getOrgs();
+                    }],
                     projectOb: ['$stateParams', 'ProjectService', 'token', function($stateParams, ProjectService, token) {
-                        return ProjectService.getProject($stateParams.projectId);
+                        return ProjectService.getProject($stateParams.orgId, $stateParams.projectId);
                     }],
                     projectObs: ['$stateParams', 'ProjectService', 'token', 'projectOb', function($stateParams, ProjectService, token, projectOb) {
-                        return ProjectService.getProjects(projectOb.orgId);
+                        return ProjectService.getProjects($stateParams.orgId);
                     }],
-                    orgOb: ['ProjectService', 'projectOb', 'token', function(ProjectService, projectOb, token) {
-                        return ProjectService.getOrg(projectOb.orgId);
+                    orgOb: ['ProjectService', 'projectOb', 'token', function($stateParams, ProjectService, token) {
+                        return ProjectService.getOrg($stateParams.orgId);
                     }],
                     refObs: ['$stateParams', 'ProjectService', 'token', function($stateParams, ProjectService, token) {
-                        return ProjectService.getRefs($stateParams.projectId);
+                        return ProjectService.getRefs($stateParams.orgId, $stateParams.projectId);
                     }],
                     tagObs: ['refObs', function(refObs) {
                         var ret = [];
@@ -345,11 +345,14 @@ angular.module('mmsApp', ['mms', 'mms.directives', 'app.tpls', 'fa.directive.bor
             .state('project.ref', { // equivalent to old sites and documents page
                 url: '/:refId?search',
                 resolve: {
+                    orgOb: ['$stateParams', 'ProjectService', 'token', function($stateParams, ProjectService, token) {
+                        return ProjectService.getOrg($stateParams.orgId);
+                    }],
                     projectOb: ['$stateParams', 'ProjectService', 'token', function($stateParams, ProjectService, token) {
-                        return ProjectService.getProjectMounts($stateParams.projectId, $stateParams.refId);
+                        return ProjectService.getProjectMounts($stateParams.orgId, $stateParams.projectId, $stateParams.refId);
                     }],
                     refOb: ['$stateParams', 'ProjectService', 'token', function($stateParams, ProjectService, token) {
-                        return ProjectService.getRef($stateParams.refId, $stateParams.projectId);
+                        return ProjectService.getRef($stateParams.orgId, $stateParams.projectId, $stateParams.refId);
                     }],
                     tagOb: ['refOb', function(refOb) {
                         if(refOb.type === "Tag")
@@ -543,7 +546,7 @@ angular.module('mmsApp', ['mms', 'mms.directives', 'app.tpls', 'fa.directive.bor
                 url: '/document/:documentId',
                 resolve: {
                     projectOb: ['$stateParams', 'ProjectService', 'token', function($stateParams, ProjectService, token) {
-                        return ProjectService.getProjectMounts($stateParams.projectId, $stateParams.refId);
+                        return ProjectService.getProjectMounts($stateParams.orgId, $stateParams.projectId, $stateParams.refId);
                     }],
                     documentOb: ['$stateParams', '$q', 'ElementService', 'ViewService', 'refOb', 'token', function($stateParams, $q, ElementService, ViewService, refOb, token) {
                         var deferred = $q.defer();

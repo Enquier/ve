@@ -41,7 +41,7 @@ module.exports = function(grunt) {
                 //open: true,
                 //key: grunt.file.read('/run/secrets/server.key').toString(),
                 //cert: grunt.file.read('/run/secrets/server.crt').toString(),
-                ca: grunt.file.read('certs/TrustStore.pem').toString(),
+                //ca: grunt.file.read('certs/TrustStore.pem').toString(),
                 base: {
                     path: './dist',
                     options: {
@@ -82,13 +82,12 @@ module.exports = function(grunt) {
                 //port: 8080
                 //},
                 {
-                    context: '/api',
-                    protocol: 'http',
-                    host: server.mms_host,
-                    changeOrigin: true,
-                    secure: false,
-                    https: serverHttps,
-                    port: serverPort
+                context: '/api',
+                protocol: 'http',
+                host: server.mms_host,
+                changeOrigin: true,
+                secure: false,
+                port: server.mms_port
                 }
             ]
         };

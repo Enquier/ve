@@ -168,20 +168,20 @@ function urlService(baseUrl, mmsUrl) {
         return root + '/projects';
     };
 
-    var getProjectURL = function(projectId) {
-        return root + "/projects/" + projectId;
+    var getProjectURL = function(orgId, projectId) {
+        return root + "/orgs/" + orgId + "/projects/" + projectId;
     };
 
-    var getProjectMountsURL = function(projectId, refId) {
-        return root + '/projects/' + projectId + '/refs/' + refId + '/mounts';
+    var getProjectMountsURL = function(orgId, projectId, refId) {
+        return root + '/orgs/' + orgId + '/projects/' + projectId + '/refs/' + refId + '/mounts';
     };
 
-    var getRefsURL = function(projectId) {
-        return root + '/projects/' + projectId + '/refs';
+    var getRefsURL = function(orgId, projectId) {
+        return root + '/orgs/' + orgId + '/projects/' + projectId + '/branches';
     };
 
-    var getRefURL = function(projectId, refId) {
-        return root + '/projects/' + projectId + '/refs/' + refId;
+    var getRefURL = function(orgId, projectId, branchId) {
+        return root + '/orgs/' + orgId + '/projects/' + projectId + '/branches/' + branchId;
     };
 
     var getRefHistoryURL = function(projectId, refId, timestamp) {

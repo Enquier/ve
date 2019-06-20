@@ -24,6 +24,7 @@ function mmsSearch($window, $anchorScroll, CacheService, ElementService, Project
         scope: {
             mmsOptions: '<',
             mmsProjectId: '@',
+            mmsOrgId: '@',
             mmsRefId: '@'
         }
     };
@@ -89,7 +90,7 @@ function mmsSearch($window, $anchorScroll, CacheService, ElementService, Project
         };
 
         // Set functions
-        ProjectService.getProjectMounts(scope.mmsProjectId, scope.refId); //ensure project mounts object is cached
+        ProjectService.getProjectMounts(scope.mmsOrgId, scope.mmsProjectId, scope.refId); //ensure project mounts object is cached
         // Function used to get string value of metatype names for advanced search
         var getMetatypeSelection = function (id) {
             var mainElement = angular.element(id);
@@ -99,7 +100,7 @@ function mmsSearch($window, $anchorScroll, CacheService, ElementService, Project
         // Get metatypes for dropdown options
         var getMetaTypes = function () {
             scope.metatypeSearch = "fa fa-spin fa-spinner";
-            ProjectService.getMetatypes(scope.mmsProjectId, scope.refId)
+            ProjectService.getMetatypes(scope.mmsOrgId, scope.mmsProjectId, scope.refId)
                 .then(function (data) {
                     // cache metatypes
                     scope.metatypeList = data;
@@ -383,6 +384,7 @@ function mmsSearch($window, $anchorScroll, CacheService, ElementService, Project
             queryOb.size = numItems;
             var reqOb = {
                 projectId: scope.mmsProjectId,
+                orgId: scope.mmsOrgId,
                 refId: scope.refId,
                 checkType: true
             };
@@ -436,12 +438,12 @@ function mmsSearch($window, $anchorScroll, CacheService, ElementService, Project
             var projList = [];
             var projectTermsOb = {};
 
-            var mountCacheKey = ['project-mounts', scope.mmsProjectId, scope.refId];
+            var mountCacheKey = ['project-mounts', scope.mmsOrgId, scope.mmsProjectId, scope.refId];
             if (CacheService.exists(mountCacheKey)) {
                 projList = CacheService.get(mountCacheKey);
             } else {
                 // Get project element data to gather mounted project list
-                var cacheKey = ['project', scope.mmsProjectId, scope.refId];
+                var cacheKey = ['project', scope.mmsOrgId, scope.mmsProjectId, scope.refId];
                 var cachedProj = CacheService.get(cacheKey);
                 if (cachedProj) {
                     getAllMountsAsArray(cachedProj, projList);

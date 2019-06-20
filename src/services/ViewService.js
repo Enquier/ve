@@ -138,11 +138,11 @@ function ViewService($q, $http, $rootScope, URLService, ElementService, UtilsSer
     var getViewElements = function(reqOb, weight, update) {
         UtilsService.normalize(reqOb);
         var deferred = $q.defer();
-        var key = 'viewElements' + reqOb.projectId + reqOb.refId + reqOb.elementId + reqOb.commitId;
+        var key = 'viewElements' + reqOb.orgId + reqOb.projectId + reqOb.refId + reqOb.elementId + reqOb.commitId;
         if (inProgress[key]) {
             return inProgress[key];
         }
-        var requestCacheKey = ['elements', reqOb.projectId, reqOb.refId, reqOb.elementId, reqOb.commitId];
+        var requestCacheKey = ['elements', reqOb.orgId, reqOb.projectId, reqOb.refId, reqOb.elementId, reqOb.commitId];
         var cached = CacheService.get(requestCacheKey);
         if (cached && !update) {
             deferred.resolve(cached);

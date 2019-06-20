@@ -20,6 +20,7 @@ angular.module('mms.directives')
  *
  * @param {string} mmsElementId The id of the view
  * @param {string} mmsProjectId The project id for the view
+ * @param {string} mmsOrgId The project id for the view
  * @param {string=master} mmsRefId Reference to use, defaults to master
  * @param {string=latest} mmsCommitId Commit ID, default is latest
  */
@@ -37,11 +38,12 @@ function mmsTranscludeImg(ArtifactService, AuthService, ElementService, URLServi
         });
 
         var changeElement = function(newVal, oldVal) {
-            if (!newVal || (newVal === oldVal && processed) || !scope.mmsProjectId) {
+            if (!newVal || (newVal === oldVal && processed) || !scope.mmsProjectId || !scope.mmsOrgId) {
                 return;
             }
             processed = true;
             scope.projectId = scope.mmsProjectId;
+            scope.orgId = scope.mmsOrgId;
             scope.refId = scope.mmsRefId ? scope.mmsRefId : 'master';
             scope.commitId = scope.mmsCommitId ? scope.mmsCommitId : 'latest';
             var reqOb = {elementId: scope.mmsElementId, projectId: scope.projectId, refId: scope.refId, commitId: scope.commitId};
@@ -92,6 +94,7 @@ function mmsTranscludeImg(ArtifactService, AuthService, ElementService, URLServi
         scope: {
             mmsElementId: '@',
             mmsProjectId: '@',
+            mmsOrgId: '@',
             mmsRefId: '@',
             mmsCommitId: '@',
             mmsCfLabel: '@'

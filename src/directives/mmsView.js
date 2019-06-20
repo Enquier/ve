@@ -48,6 +48,7 @@ angular.module('mms.directives')
  *
  * @param {string} mmsElementId The id of the view
  * @param {string} mmsProjectId The project id for the view
+ * @param {string} mmsOrgId The org id for the view
  * @param {string=master} mmsRefId Reference to use, defaults to master
  * @param {string=latest} mmsCommitId Commit ID, default is latest
  * @param {expression=} mmsCfClicked The expression to handle transcluded elements in the
@@ -119,6 +120,7 @@ function mmsView(Utils, AuthService, ViewService, ElementService, $templateCache
         this.getElementOrigin = function() {
             return {
                 projectId: $scope.mmsProjectId,
+                orgId: $scope.mmsOrgId,
                 refId: $scope.mmsRefId,
                 commitId: $scope.mmsCommitId
             };
@@ -139,7 +141,7 @@ function mmsView(Utils, AuthService, ViewService, ElementService, $templateCache
 
     var mmsViewLink = function(scope, element, attrs) {
         // Build request object
-        var reqOb = {elementId: scope.mmsElementId, projectId: scope.mmsProjectId, refId: scope.mmsRefId, commitId: scope.mmsCommitId};
+        var reqOb = {elementId: scope.mmsElementId, orgId: scope.mmsOrgId, projectId: scope.mmsProjectId, refId: scope.mmsRefId, commitId: scope.mmsCommitId};
         var processed = false;
         scope.setPeLineVisibility = function($event) {
             window.setTimeout(function() {
@@ -329,6 +331,7 @@ function mmsView(Utils, AuthService, ViewService, ElementService, $templateCache
         scope: {
             mmsElementId: '@',
             mmsProjectId: '@',
+            mmsOrgId: '@',
             mmsRefId: '@',
             mmsCommitId: '@',
             mmsLink: '<',
