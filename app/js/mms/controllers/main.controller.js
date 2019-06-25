@@ -35,10 +35,10 @@ function($scope, $timeout, $location, $rootScope, $state, _, $window, $uibModal,
     $scope.$on('$stateChangeError', function(event, toState, toParams, fromState, fromParams, error) {
         $rootScope.ve_stateChanging = false;
         $rootScope.ve_viewContentLoading = false;
-        //check if error is ticket error
+        //check if error is token error
         if (!error || error.status === 401 || 
                 (error.status === 404 && error.config && error.config.url && 
-                error.config.url.indexOf('/login/ticket') !== -1)) { //check if 404 if checking valid ticket
+                error.config.url.indexOf('/api/version') !== -1)) { //check if 404 if checking valid ticket
             event.preventDefault();
             $rootScope.ve_redirect = {toState: toState, toParams: toParams};
             $state.go('login', {notify: false});

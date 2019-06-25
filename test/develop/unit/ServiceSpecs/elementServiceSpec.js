@@ -25,14 +25,14 @@ describe('Service: ElementService', function() {
 			mockApplicationService	= $injector.get('ApplicationService');
 			ElementServiceObj		= $injector.get('ElementService');
             urlService = $injector.get('URLService');
-            urlService.setTicket(null);
+            urlService.setToken(null);
 		});
 
         $httpBackend.whenGET(function(url) {
-        	return url.indexOf('/alfresco/service/mms/login/ticket/') !== -1;
+        	return url.indexOf('/api/login') !== -1;
 		} ).respond(200, {username: 'fakeUser'});
         $httpBackend.whenGET(function(url) {
-            return url.indexOf('/alfresco/service/orgs?alf_ticket') !== -1;
+            return url.indexOf('/api/orgs') !== -1;
         } ).respond(200, {orgs: ['org1']});
 
 		projects = {
@@ -597,7 +597,7 @@ describe('Service: ElementService', function() {
                 elements: [{name: 'docName', _commitId: 2}]
 			};
 
-            urlService.setTicket(null);
+            urlService.setToken(null);
 
             $httpBackend.whenGET('/alfresco/service/projects/heyaproject/refs/master/elements/heyanelement').respond(410, mockedData);
             $httpBackend.whenGET(function(url) {

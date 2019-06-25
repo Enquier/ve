@@ -44,10 +44,10 @@ function ProjectService($q, $http,ApplicationService,CacheService,ElementService
             inProgress[urlkey] = deferred.promise;
             $http.get(urlkey)
                 .then(function(response) {
-                    if (!response.data.orgs || response.data.orgs.length < 1) {
+                    if (!response.data || response.data.length < 1) {
                         deferred.reject({status: 404, data: '', message: 'Org not found'});
                     } else {
-                        CacheService.put(key, response.data.orgs[0], true);
+                        CacheService.put(key, response.data[0], true);
                         deferred.resolve(CacheService.get(key));
                     }
                 }, function(response) {
@@ -113,9 +113,7 @@ function ProjectService($q, $http,ApplicationService,CacheService,ElementService
                 var projects = [];
                 for (var i = 0; i < response.data.length; i++) {
                     var project = response.data[i];
-                    if (orgId) {
-                        project.orgId = orgId;
-                    }
+                    project.org = orgId;
                     CacheService.put(['project', project.id], project, true);
                     projects.push(CacheService.get(['project', project.id]));
                 }
@@ -142,17 +140,17 @@ function ProjectService($q, $http,ApplicationService,CacheService,ElementService
         if (inProgress.hasOwnProperty(url)) {
             return inProgress[url];
         }
-        var cacheKey = ['project', orgId, projectId];
+        var cacheKey = ['project', projectId];
         if (CacheService.exists(cacheKey))
             deferred.resolve(CacheService.get(cacheKey));
         else {
             inProgress[url] = deferred.promise;
             $http.get(url, {headers: URLService.getHeaders()}).then(function(response) {
-                if (!angular.isArray(response.data.projects) || response.data.projects.length === 0) {
+                if (!angular.isArray(response.data) || response.data.length === 0) {
                     deferred.reject({status: 500, data: '', message: "Server Error: empty response"});
                     return;
                 }
-                CacheService.put(cacheKey, response.data.projects[0], true);
+                CacheService.put(cacheKey, response.data[0], true);
                 deferred.resolve(CacheService.get(cacheKey));
             }, function(response) {
                 URLService.handleHttpStatus(response.data, response.status, response.headers, response.config, deferred);
@@ -165,7 +163,7 @@ function ProjectService($q, $http,ApplicationService,CacheService,ElementService
 
     var getProjectMounts = function(orgId, projectId, refId) {
         var deferred = $q.defer();
-        var url = URLService.getProjectMountsURL(orgId, projectId, refId);
+        var url = URLService.getProjectURL(orgId, projectId);
         if (inProgress.hasOwnProperty(url)) {
             return inProgress[url];
         }
@@ -175,11 +173,11 @@ function ProjectService($q, $http,ApplicationService,CacheService,ElementService
         } else {
             inProgress[url] = deferred.promise;
             $http.get(url).then(function(response) {
-                if (!angular.isArray(response.data.projects) || response.data.projects.length === 0) {
+                if (!angular.isArray(response.data.projectReferences) || response.data.projectReferences.length === 0) {
                     deferred.reject({status: 500, data: '', message: "Server Error: empty response"});
                     return;
                 }
-                CacheService.put(cacheKey, response.data.projects[0], true);
+                CacheService.put(cacheKey, response.data.projectReferences[0], true);
                 deferred.resolve(CacheService.get(cacheKey));
             }, function(response) {
                 URLService.handleHttpStatus(response.data, response.status, response.headers, response.config, deferred);
@@ -202,18 +200,18 @@ function ProjectService($q, $http,ApplicationService,CacheService,ElementService
         } else {
             inProgress[url] = deferred.promise;
             $http.get(url).then(function(response) {
-                if (!angular.isArray(response.data.refs)) {
+                if (!angular.isArray(response.data)) {
                     deferred.reject({status: 500, data: '', message: "Server Error: empty response"});
                     return;
                 }
                 var refs = [];
-                for (var index = 0; index < response.data.refs.length; index++) {
-                    var ref = response.data.refs[index];
-                    if (ref.id === 'master') {
-                        ref.type = 'Branch';
-                    }
-                    CacheService.put(['ref', projectId, ref.id], ref, true);
-                    refs.push(CacheService.get(['ref', projectId, ref.id]));
+                for (var index = 0; index < response.data.length; index++) {
+                    var ref = response.data[index];
+                    //if (ref.id === 'master') {
+                    ref.type = 'Branch';
+                    //}
+                    CacheService.put(['ref', orgId, projectId, ref.id], ref, true);
+                    refs.push(CacheService.get(['ref', orgId, projectId, ref.id]));
                 }
                 CacheService.put(cacheKey, refs, false);
                 deferred.resolve(CacheService.get(cacheKey));
@@ -229,7 +227,7 @@ function ProjectService($q, $http,ApplicationService,CacheService,ElementService
     var getRef = function(orgId, projectId, refId) {
         var deferred = $q.defer();
         getRefs(orgId, projectId).then(function(data) {
-            var result = CacheService.get(['ref', projectId, refId]);
+            var result = CacheService.get(['ref', orgId, projectId, refId]);
             if (result) {
                 deferred.resolve(result);
             } else {
@@ -251,11 +249,11 @@ function ProjectService($q, $http,ApplicationService,CacheService,ElementService
         }
         inProgress[url] = deferred.promise;
         $http.get(url).then(function(response) {
-            if (!angular.isArray(response.data.commits) || response.data.commits.length === 0) {
+            if (!angular.isArray(response.data) || response.data.length === 0) {
                 deferred.reject({status: 500, data: '', message: "Error: Project does not exist at specified time."});
                 return;
             }
-            deferred.resolve(response.data.commits);
+            deferred.resolve(response.data);
         }, function(response) {
             URLService.handleHttpStatus(response.data, response.status, response.headers, response.config, deferred);
         }).finally(function() {
@@ -264,17 +262,17 @@ function ProjectService($q, $http,ApplicationService,CacheService,ElementService
         return deferred.promise;
     };
 
-    var createRef = function(refOb, projectId) {
+    var createRef = function(refOb, projectId, orgId) {
         var deferred = $q.defer();
         var url = URLService.getRefsURL(projectId);
         $http.post(url, {'refs': [refOb], 'source': ApplicationService.getSource()})
             .then(function(response) {
-                if (!angular.isArray(response.data.refs) || response.data.refs.length === 0) {
+                if (!angular.isArray(response.data) || response.data.length === 0) {
                     deferred.reject({status: 500, data: '', message: "Server Error: empty response"});
                     return;
                 }
-                var createdRef = response.data.refs[0];
-                var list = CacheService.get(['refs', projectId]);
+                var createdRef = response.data[0];
+                var list = CacheService.get(['refs', orgId, projectId]);
                 if (list) {
                     list.push(createdRef);
                 }
@@ -285,26 +283,26 @@ function ProjectService($q, $http,ApplicationService,CacheService,ElementService
         return deferred.promise;
     };
 
-    var updateRef = function(refOb, projectId) {
+    var updateRef = function(refOb, projectId, orgId) {
         var deferred = $q.defer();
         var url = URLService.getRefsURL(projectId);
         $http.post(url, {'refs': [refOb], 'source': ApplicationService.getSource()})
             .then(function(response) {
-                if (!angular.isArray(response.data.refs) || response.data.refs.length === 0) {
+                if (!angular.isArray(response.data) || response.data.length === 0) {
                     deferred.reject({status: 500, data: '', message: "Server Error: empty response"});
                     return;
                 }
-                var resp = response.data.refs[0];
-                deferred.resolve(CacheService.put(['ref', projectId, resp.id], resp, true));
+                var resp = response.data[0];
+                deferred.resolve(CacheService.put(['ref', orgId, projectId, resp.id], resp, true));
             }, function(response) {
                 URLService.handleHttpStatus(response.data, response.status, response.headers, response.config, deferred);
             });
         return deferred.promise;
     };
 
-    var deleteRef = function(refId, projectId) {
+    var deleteRef = function(orgId, refId, projectId) {
         var deferred = $q.defer();
-        var url = URLService.getRefURL(projectId, refId);
+        var url = URLService.getRefURL(orgId, projectId, refId);
         $http.delete(url).then(function(response) {
             var key = ['ref', projectId, refId];
             var refOb = CacheService.get(key);

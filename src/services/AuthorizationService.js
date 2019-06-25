@@ -20,14 +20,12 @@ angular.module('mms')
 function AuthService($q, $http, CacheService, URLService, HttpService, ElementService, ViewService, ProjectService, $window) {
 
     var token = $window.localStorage.getItem('token');
-    var getAuthorized = function (credentials) {
-        var auth = $window.btoa(credentials.username + ":" + credentials.password);
+    var getAuthorized = function () {
         var deferred = $q.defer();
         var loginURL = '/api/login';
         $http.post(loginURL, {
             headers: {
                 'Content-Type': 'application/json',
-                Authorization: 'Basic ' + auth
             }
         }).then(function (success) {
             URLService.setToken(success.data.token);
@@ -35,6 +33,7 @@ function AuthService($q, $http, CacheService, URLService, HttpService, ElementSe
             $window.localStorage.setItem('token', token);
             deferred.resolve(token);
         }, function(fail){
+            removeToken();
             URLService.handleHttpStatus(fail.data, fail.status, fail.header, fail.config, deferred);
             deferred.reject(fail);
         });

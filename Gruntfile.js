@@ -302,6 +302,7 @@ module.exports = function(grunt) {
         jshint: {
             beforeconcat: jsFiles,
             options: {
+                esversion: '6',
                 reporterOutput: '',
                 evil: true, //allow eval for plot integration
                 globalstrict: true,
@@ -384,7 +385,7 @@ module.exports = function(grunt) {
             },
             continuous:{
                 configFile:'config/develop/karma.develop.conf.js',
-                logLevel: 'ERROR'
+                logLevel: 'DEBUG'
             }
         },
 

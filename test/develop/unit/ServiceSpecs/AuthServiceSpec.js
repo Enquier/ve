@@ -5,7 +5,7 @@ describe('Service: Authorization Service', function() {
 
 	var AuthServiceObj;
 	var $httpBackend, authRequestHandler;
-	var credentialsJSON, ticket;
+	var credentialsJSON, token;
 	var root = '/alfresco/service';
 
 	beforeEach(inject(function($injector) {
@@ -15,7 +15,7 @@ describe('Service: Authorization Service', function() {
 			"username": "someone",
 			"password": "jksdlfkl3923432"
 		};
-		var mockTicket = {data:{ticket: "TICKET_123456789"}};
+		var mockToken = {data:{token: "TICKET_123456789"}};
 		// backend definition common for all tests
 		authRequestHandler = $httpBackend.whenPOST(root + '/api/login', credentialsJSON)
 			.respond(function(method, url, data) {

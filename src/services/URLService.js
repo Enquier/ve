@@ -106,7 +106,7 @@ function urlService(baseUrl, mmsUrl) {
      * @returns {string} Returns object with mmsversion url
      */
     var getMmsVersionURL = function() {
-        return root + "/mmsversion";
+        return root + "/version";
     };
 
     /**
@@ -151,7 +151,7 @@ function urlService(baseUrl, mmsUrl) {
      * @returns {string} The url
      */
     var getCheckLoginURL = function() {
-        return root + "/checklogin";
+        return root + "/version";
     };
 
     var getOrgURL = function(orgId) {
@@ -163,9 +163,7 @@ function urlService(baseUrl, mmsUrl) {
     };
 
     var getProjectsURL = function(orgId) {
-        if (orgId)
-            return root + "/orgs/" + orgId + '/projects';
-        return root + '/projects';
+        return root + "/orgs/" + orgId + '/projects';
     };
 
     var getProjectURL = function(orgId, projectId) {

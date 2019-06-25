@@ -1,4 +1,5 @@
 'use strict';
+import angular from 'angular';
 
 angular.module('mmsApp', ['mms', 'mms.directives', 'app.tpls', 'fa.directive.borderLayout', 'ui.bootstrap', 'ui.router', 'ui.tree', 'angular-growl', 'cfp.hotkeys', 'angulartics', 'angulartics.piwik', 'ngStorage', 'ngAnimate', 'ngPromiseExtras', 'ngCookies'])
     .config(['$stateProvider', '$urlRouterProvider', '$httpProvider', '$provide', 'URLServiceProvider', function($stateProvider, $urlRouterProvider, $httpProvider, $provide, URLServiceProvider) {
@@ -183,8 +184,10 @@ angular.module('mmsApp', ['mms', 'mms.directives', 'app.tpls', 'fa.directive.bor
                             $scope.orgs = orgObs;
                             var orgId, projectId;
                             $scope.selectOrg = function(org) {
+                                growl.info('Loading more views!', {ttl: -1});
                                 if (org) {
                                     $localStorage.org = org;
+                                    $localStorage.fukU = 'foo';
                                     orgId = org.id;
                                     $localStorage.org.orgName = org.name;
                                     $scope.selectedOrg = $localStorage.org.name;
@@ -267,7 +270,7 @@ angular.module('mmsApp', ['mms', 'mms.directives', 'app.tpls', 'fa.directive.bor
                         return ProjectService.getProjects($stateParams.orgId);
                     }],
                     orgOb: ['ProjectService', 'projectOb', 'token', function($stateParams, ProjectService, token) {
-                        return ProjectService.getOrg($stateParams.orgId);
+                        return ProjectService.getOrg($stateParams.orgs[1].id);
                     }],
                     refObs: ['$stateParams', 'ProjectService', 'token', function($stateParams, ProjectService, token) {
                         return ProjectService.getRefs($stateParams.orgId, $stateParams.projectId);
@@ -362,11 +365,11 @@ angular.module('mmsApp', ['mms', 'mms.directives', 'app.tpls', 'fa.directive.bor
                         }
                     }],
                     branchOb: ['refOb', function(refOb) {
-                        if(refOb.type === "Branch")
+                        //if(refOb.type === "Branch")
                             return refOb;
-                        else {
-                            return [];
-                        }
+                        //else {
+                        //    return [];
+                        //}
                     }],
                     groupObs: ['$stateParams', 'ProjectService', 'token', function($stateParams, ProjectService, token) {
                         return ProjectService.getGroups($stateParams.projectId, $stateParams.refId);
